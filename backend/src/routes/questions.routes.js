@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
 
-// 1. Importa AMBAS funciones del controlador
-const { createQuestion, getQuestions } = require('../controllers/questions.controller');
+const { createQuestion, getQuestions, updateQuestion, deleteQuestion } = require('../controllers/questions.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
-// Ruta para CREAR una pregunta
+// Crear una pregunta
 router.post('/', authMiddleware, createQuestion);
 
-// 2. NUEVO: Ruta para OBTENER todas las preguntas del profesor
+// Obtener todas las preguntas del profesor logueado
 router.get('/', authMiddleware, getQuestions);
+
+// Actualizar una pregunta existente
+router.put('/:id', authMiddleware, updateQuestion);
+
+// Eliminar una pregunta existente
+router.delete('/:id', authMiddleware, deleteQuestion);
 
 module.exports = router;

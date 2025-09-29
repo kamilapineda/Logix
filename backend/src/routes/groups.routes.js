@@ -1,20 +1,26 @@
 const express = require('express');
 const router = express.Router();
 
-// 1. Importa la nueva función del controlador
-const { createGroup, getGroups, addStudentToGroup, joinGroup } = require('../controllers/groups.controller');
+// Importar funciones del controlador y middleware
+const { createGroup, getGroups, addStudentToGroup, joinGroup, updateGroup, deleteGroup } = require('../controllers/groups.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
-// Ruta para OBTENER todos los grupos del profesor logueado
+// Obtener todos los grupos del profesor logueado
 router.get('/', authMiddleware, getGroups);
 
-// Ruta para CREAR un nuevo grupo
+// Crear un nuevo grupo
 router.post('/', authMiddleware, createGroup);
 
-//Ruta para AÑADIR un estudiante a un grupo
+// Añadir un estudiante a un grupo
 router.post('/add-student', authMiddleware, addStudentToGroup);
 
-// Ruta para que un estudiante se una a un grupo
+// Unirse a un grupo
 router.post('/join', authMiddleware, joinGroup);
+
+// Actualizar un grupo existente
+router.put('/:id', authMiddleware, updateGroup);
+
+// Eliminar un grupo existente
+router.delete('/:id', authMiddleware, deleteGroup);
 
 module.exports = router;

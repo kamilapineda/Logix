@@ -1,17 +1,17 @@
 const supabase = require('../config/supabaseClient');
 
-// Función para crear un nuevo grupo 
+// Crear un nuevo grupo con código aleatorio
 const createGroup = async (req, res) => {
   try {
     const { name } = req.body;
     const profesor_id = req.user.id; 
 
-    // Generamos un código aleatorio de 6 caracteres
+    // Generamos un código único de 6 caracteres
     const join_code = Math.random().toString(36).substring(2, 8).toUpperCase();
 
+    // Inserta el grupo en la base de datos
     const { data, error } = await supabase
       .from('groups')
-      // Añadimos el join_code al objeto que insertamos
       .insert([{ name, profesor_id, join_code }])
       .select()
       .single(); // Usamos .single() para obtener un objeto, no un array
@@ -21,7 +21,6 @@ const createGroup = async (req, res) => {
     }
     res.status(201).json({ message: 'Grupo creado con éxito', group: data });
   } catch (error) {
-    // Añadimos un console.error para ver el detalle en nuestra terminal
     console.error('Error detallado al crear grupo:', error); 
     res.status(500).json({ error: error.message });
   }
@@ -30,20 +29,17 @@ const createGroup = async (req, res) => {
 // Función para obtener todos los grupos de un profesor
 const getGroups = async (req, res) => {
   try {
-    // Obtenemos el ID del profesor que está haciendo la petición
     const profesor_id = req.user.id;
 
-    // Buscamos en la tabla 'groups' todas las filas donde 'profesor_id' coincida
+    // Busca los grupos que pertenecen al profesor
     const { data, error } = await supabase
       .from('groups')
-      .select('*') // Queremos toda la información de los grupos
-      .eq('profesor_id', profesor_id); // El criterio de búsqueda
+      .select('*') 
+      .eq('profesor_id', profesor_id); 
 
     if (error) {
       return res.status(400).json({ error: error.message });
     }
-
-    // Enviamos la lista de grupos encontrados
     res.json(data);
 
   } catch (error) {
@@ -51,12 +47,12 @@ const getGroups = async (req, res) => {
   }
 };
 
+// Añadir un estudiante a un grupo
 const addStudentToGroup = async (req, res) => {
   try {
-    // Obtenemos el email del estudiante y el ID del grupo
     const { email, group_id } = req.body;
 
-    // 1. Buscamos al usuario (estudiante) por su email
+    // Busca el estudiante en la tabla users
     const { data: student, error: studentError } = await supabase
       .from('users')
       .select('id')
@@ -70,7 +66,7 @@ const addStudentToGroup = async (req, res) => {
 
     const student_id = student.id;
 
-    // 2. Creamos el enlace en la tabla 'student_groups'
+    // Inserta la relación en student_groups
     const { data, error } = await supabase
       .from('student_groups')
       .insert([{ student_id, group_id }])
@@ -90,17 +86,13 @@ const addStudentToGroup = async (req, res) => {
   }
 };
 
-
-
 // Función para que un estudiante se una a un grupo con un código
 const joinGroup = async (req, res) => {
   try {
-    // Obtenemos el código del cuerpo de la petición
     const { join_code } = req.body;
-    // Obtenemos el ID del estudiante que está logueado
     const student_id = req.user.id;
 
-    // 1. Buscamos el grupo que tenga ese código de invitación
+    // Busca el grupo por join_code
     const { data: group, error: groupError } = await supabase
       .from('groups')
       .select('groups_id') // Solo necesitamos su ID
@@ -114,7 +106,7 @@ const joinGroup = async (req, res) => {
 
     const group_id = group.groups_id;
 
-    // 2. Creamos el enlace en la tabla 'student_groups'
+    // Inserta relación en student_groups
     const { error: insertError } = await supabase
       .from('student_groups')
       .insert([{ student_id, group_id }]);
@@ -134,11 +126,60 @@ const joinGroup = async (req, res) => {
   }
 };
 
-// Exportamos AMBAS funciones
+// Actualizar el nombre de un grupo
+const updateGroup = async (req, res) => {
+  try {
+    const { id } = req.params; // id del grupo
+    const { name } = req.body;
+    const profesor_id = req.user.id;
+
+    // Actualiza el grupo si pertenece al profesor
+    const { data, error } = await supabase
+      .from('groups')
+      .update({ name })
+      .eq('groups_id', id) 
+      .eq('profesor_id', profesor_id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ message: 'Grupo actualizado con éxito', group: data });
+  } catch (error) {
+    console.error('Error al actualizar grupo:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Eliminar un grupo del profesor
+const deleteGroup = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const profesor_id = req.user.id;
+
+    // Elimina el grupo si pertenece al profesor
+    const { error } = await supabase
+      .from('groups')
+      .delete()
+      .eq('groups_id', id)
+      .eq('profesor_id', profesor_id);
+
+    if (error) throw error;
+
+    res.json({ message: 'Grupo eliminado con éxito' });
+  } catch (error) {
+    console.error('Error al eliminar grupo:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Exporta todas las funciones de grupos
 module.exports = {
   createGroup,
   getGroups,
   addStudentToGroup,
   joinGroup,
+  updateGroup,
+  deleteGroup
 };
 

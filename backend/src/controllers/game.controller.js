@@ -1,9 +1,9 @@
 const supabase = require('../config/supabaseClient');
 
-// ✅ Intentos fijos para todos los tipos
+// Número máximo de intentos por pregunta
 const MAX_ATTEMPTS = 5;
 
-// --- FUNCIÓN DE CÁLCULO DE PUNTOS ---
+// Calcula el puntaje según tipo, dificultad, intento y si es correcto
 const calculateScore = (question, mission, attemptNumber, isCorrect) => {
   const difficulty = mission.dificultad;
   const questionType = question.tipo;
@@ -19,12 +19,12 @@ const calculateScore = (question, mission, attemptNumber, isCorrect) => {
     return 0;
   }
 
-  // ❌ Incorrecto = 0 puntos
+  // Si la respuesta es incorrecta, no da puntos
   if (!isCorrect) {
     return 0;
   }
 
-  // ✅ Correcto: puntos dependen del intento (máx 5)
+  // Si la respuesta es correcta, el puntaje depende del intento (máx 5)
   switch (attemptNumber) {
     case 1: return basePoints;
     case 2: return Math.round(basePoints * 0.8);
@@ -35,13 +35,13 @@ const calculateScore = (question, mission, attemptNumber, isCorrect) => {
   }
 };
 
-// --- FUNCIÓN SUBMIT ANSWER ---
+// Procesa la respuesta enviada por el estudiante
 const submitAnswer = async (req, res) => {
   try {
     const { question_id, mission_id, answer_given } = req.body;
     const student_id = req.user.id;
 
-    // ✅ Usamos mission_questions para traer tanto la pregunta como la misión
+    // Traer pregunta y misión desde la base
     const { data: result, error: questionError } = await supabase
       .from('mission_questions')
       .select(`
@@ -59,8 +59,8 @@ const submitAnswer = async (req, res) => {
 
     const question = result.question;
     const missionDetails = { dificultad: result.mission.dificultad };
-
-    // 🔄 Obtener intentos previos
+    
+    // Contar intentos previos del estudiante
     const { count: previousAttempts } = await supabase
       .from('student_answers')
       .select('id', { count: 'exact' })
@@ -70,14 +70,14 @@ const submitAnswer = async (req, res) => {
 
     const currentAttemptNumber = (previousAttempts ?? 0) + 1;
 
-    // ✅ Verificar respuesta
+    // Comparar respuesta dada con la correcta
     const correctAnswer = String(question.respuesta_correcta).toLowerCase().trim();
     const isCorrect = String(answer_given).toLowerCase().trim() === correctAnswer;
 
-    // ✅ Calcular puntuación
+    // Calcular puntaje ganado
     const score = calculateScore(question, missionDetails, currentAttemptNumber, isCorrect);
 
-    // Guardar respuesta del estudiante
+    // Guardar respuesta en la tabla student_answers
     await supabase.from('student_answers').insert({
       student_id,
       question_id: question.questions_id,
@@ -87,14 +87,14 @@ const submitAnswer = async (req, res) => {
       attempt_number: currentAttemptNumber
     });
 
-    // Actualizar el puntaje en la misión (función RPC)
+    // Actualizar puntaje total con función RPC
     await supabase.rpc('update_scores', {
       p_student_id: student_id,
       p_mission_id: mission_id,
       p_score_change: score
     });
 
-    // ✅ Respuesta correcta solo si agotó intentos
+    // Mostrar respuesta correcta solo si agotó intentos
     let responseCorrectAnswer = null;
     if (!isCorrect && currentAttemptNumber >= MAX_ATTEMPTS) {
       responseCorrectAnswer = question.respuesta_correcta;
@@ -106,7 +106,7 @@ const submitAnswer = async (req, res) => {
       MAX_ATTEMPTS
     });
 
-    // ✅ Respuesta al frontend
+    // Respuesta al frontend con estado actual
     res.status(200).json({
       isCorrect,
       scoreAwarded: score,
@@ -122,7 +122,7 @@ const submitAnswer = async (req, res) => {
   }
 };
 
-// --- FUNCIÓN RESET MISSION ---
+// Restablece el progreso de la misión para un estudiante
 const resetMissionProgress = async (req, res) => {
   try {
     const { mission_id } = req.body;

@@ -1,16 +1,22 @@
 const express = require('express');
 const router = express.Router();
 
-// 1. Importa 'login' junto a las otras funciones
-const { test, register, login } = require('../controllers/auth.controller');
+// Importar funciones del controlador de autenticación
+const { test, register, login, validateToken, logout } = require('../controllers/auth.controller');
 
-// Ruta de prueba
+// Ruta de prueba de autenticación
 router.get('/', test);
 
-// Ruta para el registro de usuarios
+// Registrar un nuevo usuario
 router.post('/register', register);
 
-// 2. NUEVO: Ruta para el inicio de sesión
+// Iniciar sesión y generar token
 router.post('/login', login);
+
+// Validar o renovar la sesión del usuario
+router.get('/validate', validateToken);
+
+// Cerrar sesión del usuario
+router.post('/logout', logout);
 
 module.exports = router;

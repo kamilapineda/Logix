@@ -1,28 +1,28 @@
 const jwt = require('jsonwebtoken');
 
-const authMiddleware = async (req, res, next) => {
-  // 1. Buscamos el "pase" (token) en los encabezados de la petición
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Formato: "Bearer TOKEN"
+const authMiddleware = (req, res, next) => {
+  // Buscar token en cookie o en header Authorization
+  const token =
+    req.cookies?.token || // cookie httpOnly (preferida)
+    (req.headers['authorization'] && req.headers['authorization'].split(' ')[1]); // Bearer TOKEN
 
-  // 2. Si no hay pase, le negamos el acceso
+  // Si no hay token, bloquear acceso
   if (!token) {
     return res.status(401).json({ error: 'Acceso denegado: No se proporcionó token.' });
   }
 
   try {
-    // 3. Verificamos si el pase es auténtico usando nuestra palabra secreta
+    // Verificar token con la clave secreta
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 4. Si es auténtico, adjuntamos la info del usuario a la petición
-    //    para que el siguiente en la fila (el controlador) pueda usarla.
+     // Guardar datos del usuario en la request
     req.user = decoded;
 
-    // 5. Le decimos "puedes pasar"
+    // Pasar al siguiente middleware
     next();
   } catch (error) {
-    // Si el pase es falso o ha expirado, le negamos el acceso
-    res.status(403).json({ error: 'Acceso denegado: Token no válido.' });
+    console.error('Error en authMiddleware:', error.message);
+    return res.status(403).json({ error: 'Acceso denegado: Token no válido o expirado.' });
   }
 };
 

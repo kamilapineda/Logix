@@ -1,14 +1,20 @@
 const express = require('express');
 const router = express.Router();
 
-// 1. Importa AMBAS funciones del controlador
-const { assignMissionToGroup, getAssignments } = require('../controllers/assignments.controller');
+// Importar funciones del controlador y middleware de autenticación
+const { assignMissionToGroup, getAssignments, updateAssignment, deleteAssignment } = require('../controllers/assignments.controller');
 const authMiddleware = require('../middleware/auth.middleware');
 
-// Ruta para ASIGNAR una misión a un grupo
+// Asignar una misión a un grupo
 router.post('/', authMiddleware, assignMissionToGroup);
 
-// 2. NUEVO: Ruta para OBTENER todas las asignaciones del profesor
+// Obtener todas las asignaciones del profesor
 router.get('/', authMiddleware, getAssignments);
+
+// Actualizar una asignación específica
+router.put('/:mission_id/:group_id', authMiddleware, updateAssignment);
+
+// Eliminar una asignación específica
+router.delete('/:mission_id/:group_id', authMiddleware, deleteAssignment);
 
 module.exports = router;
