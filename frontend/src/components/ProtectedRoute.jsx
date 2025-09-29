@@ -2,20 +2,18 @@ import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
-// Este componente es nuestro "guardia de seguridad".
-// Recibe como 'children' la página que queremos proteger.
 const ProtectedRoute = ({ children }) => {
-  // 1. Lee el "tablón de anuncios" para ver si hay un usuario.
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);  // Obtiene usuario y estado de carga del contexto 
 
-  // 2. Si NO hay un usuario...
-  if (!user) {
-    // ...lo redirige a la página de inicio de sesión ("/").
-    return <Navigate to="/" />;
+  if (loading) {
+    return <div>Cargando...</div>; // Muestra indicador mientras valida sesión
   }
 
-  // 3. Si SÍ hay un usuario, le permite ver la página.
-  return children;
+  if (!user) {
+    return <Navigate to="/" />; // Redirige al inicio si no hay usuario
+  } 
+
+  return children; // Renderiza el contenido protegido si hay sesión
 };
 
 export default ProtectedRoute;

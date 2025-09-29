@@ -1,58 +1,71 @@
-// 1. Importa los nuevos hooks: useContext y useNavigate
 import { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-// 2. Importa nuestro AuthContext (el tablón de anuncios)
+import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { getProfileAPI } from '../services/api';
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState(''); // Estado para el correo
+  const [password, setPassword] = useState(''); // Estado para la contraseña
+  const [message, setMessage] = useState(''); // Estado para mostrar mensajes
 
-  // 3. Prepara los hooks para usarlos
-  const navigate = useNavigate(); // Hook para la navegación
-  const { login } = useContext(AuthContext); // Hook para usar la función 'login' de nuestro contexto
+  const navigate = useNavigate(); // Hook para redirección
+  const { login } = useContext(AuthContext); // Acceso al contexto de autenticación
 
-// Dentro de tu componente Login.jsx
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Previene recarga del formulario
+    setMessage('');
 
-const handleSubmit = async (event) => {
-  event.preventDefault();
-  setMessage('');
-  try {
-    const response = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    
-    const data = await response.json();
-    console.log('Paquete recibido del backend:', data); 
+    try {
+      // Hacemos la petición al backend para login
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', 
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (response.ok) {
-        localStorage.setItem('authToken', data.token);
-      // --- ¡AQUÍ ESTÁ EL ARREGLO! ---
-      const loggedInUser = data.user; // Quitamos el [0]
+      const data = await response.json(); // Respuesta del backend
+      console.log('Paquete recibido del backend:', data);
 
-      login(loggedInUser); 
-      
-      console.log('Rol del usuario que inició sesión:', loggedInUser.role);
-
-      if (loggedInUser.role === "'Profesor'") { // Aún comparamos con las comillas
-        navigate('/professor');
-      } else {
-        navigate('/student');
+      if (!response.ok) {
+        setMessage(`Error: ${data.error || 'Credenciales inválidas.'}`);
+        return;
       }
-    } else {
-      setMessage(`Error: ${data.error || 'Credenciales inválidas.'}`);
+
+      // Pedimos el perfil completo al backend
+      try {
+        const profile = await getProfileAPI();
+        login(profile); // Guardamos el perfil en el contexto
+        localStorage.setItem('user', JSON.stringify(profile)); 
+
+        console.log('Perfil cargado:', profile);
+
+        if (profile.role === "Profesor" || profile.role === "'Profesor'") {
+          navigate('/professor');
+        } else {
+          navigate('/student');
+        }
+      } catch (err) {
+        console.error("Error obteniendo perfil:", err);
+
+        // Si falla, usamos el usuario del login
+        login(data.user); 
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        if (data.user.role === "Profesor" || data.user.role === "'Profesor'") {
+          navigate('/professor');
+        } else {
+          navigate('/student');
+        }
+      }
+
+    } catch (error) {
+      setMessage('Error de conexión. Inténtalo de nuevo.'); // Error de red
+      console.error('El error detallado es:', error);
     }
-  } catch (error) {
-    setMessage('Error de conexión. Inténtalo de nuevo.');
-    console.error('El error detallado es:', error);
-  }
-};
+  };
 
   return (
-    // ... El JSX del formulario no cambia ...
     <div className="bg-slate-800 p-8 rounded-lg shadow-xl w-96">
       <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,7 +98,7 @@ const handleSubmit = async (event) => {
       </form>
       {message && <p className="mt-4 text-center">{message}</p>}
     </div>
-  )
+  );
 }
 
 export default Login;

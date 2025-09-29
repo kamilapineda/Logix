@@ -3,20 +3,21 @@ import { getGroupsAPI, getMissionsAPI } from '../services/api';
 
 function TestData() {
   useEffect(() => {
+    // Función para probar la carga de datos desde el backend
     const testFetch = async () => {
       try {
         console.log("--- CARGANDO GRUPOS ---");
-        const groups = await getGroupsAPI();
+        const groups = await getGroupsAPI();  // Llama API de grupos
         console.table(groups);
 
         console.log("--- CARGANDO MISIONES ---");
-        const missions = await getMissionsAPI();
+        const missions = await getMissionsAPI(); // Llama API de misiones
         console.table(missions);
       } catch (error) {
-        console.error("--- ERROR EN LA PRUEBA ---", error);
+        console.error("--- ERROR EN LA PRUEBA ---", error); // Captura errores
       }
     };
-    testFetch();
+    testFetch(); // Ejecuta prueba al montar componente
   }, []);
 
   return (

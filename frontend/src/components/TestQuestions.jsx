@@ -3,17 +3,18 @@ import { getQuestionsAPI } from '../services/api';
 
 function TestQuestions() {
   useEffect(() => {
+    // Función para probar la carga de preguntas desde el backend
     const testFetch = async () => {
       try {
         console.log("--- INICIANDO PRUEBA DE CARGA DE PREGUNTAS ---");
-        const questions = await getQuestionsAPI();
+        const questions = await getQuestionsAPI(); // Llama API de preguntas
         console.log("--- DATOS RECIBIDOS DEL BACKEND ---");
-        console.table(questions); // Muestra los datos en una tabla clara
+        console.table(questions); // Muestra los datos en una tabla
       } catch (error) {
-        console.error("--- ERROR EN LA PRUEBA ---", error);
+        console.error("--- ERROR EN LA PRUEBA ---", error); // Captura errores
       }
     };
-    testFetch();
+    testFetch(); // Ejecuta prueba al montar componente
   }, []);
 
   return (

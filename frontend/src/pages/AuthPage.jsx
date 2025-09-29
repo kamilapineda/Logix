@@ -3,11 +3,14 @@ import { useLocation, Link } from 'react-router-dom';
 import Register from '../components/Register';
 import Login from '../components/Login';
 
+//logo desde assets
+import Logo from '../assets/Images/Logo.png';
+
 function AuthPage() {
   const location = useLocation();
-  // Por defecto, muestra el login, a menos que un enlace nos diga lo contrario
   const [showLogin, setShowLogin] = useState(location.state?.showLogin !== false);
 
+    // Cambiar entre login/registro según el estado de la ruta
   useEffect(() => {
     if (location.state) {
       setShowLogin(location.state.showLogin);
@@ -15,33 +18,41 @@ function AuthPage() {
   }, [location.state]);
 
   return (
-    
     <div className="bg-slate-900 min-h-screen flex items-center justify-center text-white p-4">
-            {/* --- NUEVO: Botón de Volver al Inicio, fuera del contenedor principal --- */}
-      <div className="absolute top-8 left-8"> {/* Posiciona el botón arriba a la izquierda */}
-        <Link to="/" className="text-blue-400 hover:underline text-lg flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Volver al Inicio
-        </Link>
-      </div>
-      {/* Contenedor principal para la layout de dos columnas */}
+    
+<div className="absolute top-8 left-8">
+  <Link
+    to="/"
+    className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+      />
+    </svg>
+  </Link>
+</div>
+
       <div className="flex bg-slate-800 rounded-2xl shadow-2xl overflow-hidden max-w-4xl w-full mx-auto">
         
-        {/* === Columna Izquierda: Formularios === */}
         <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
-          <h1 className="text-4xl font-bold text-center text-blue-400 mb-8">
-            LogiX
-          </h1>
-          
+      
           {showLogin ? (
             <div>
               <Login />
               <p className="text-center mt-6 text-slate-400">
                 ¿No tienes una cuenta?{' '}
-                <button 
-                  onClick={() => setShowLogin(false)} 
+                <button
+                  onClick={() => setShowLogin(false)}
                   className="font-semibold text-blue-400 hover:underline"
                 >
                   Regístrate
@@ -53,8 +64,8 @@ function AuthPage() {
               <Register />
               <p className="text-center mt-6 text-slate-400">
                 ¿Ya tienes una cuenta?{' '}
-                <button 
-                  onClick={() => setShowLogin(true)} 
+                <button
+                  onClick={() => setShowLogin(true)}
                   className="font-semibold text-blue-400 hover:underline"
                 >
                   Inicia Sesión
@@ -64,11 +75,8 @@ function AuthPage() {
           )}
         </div>
 
-        {/* === Columna Derecha: Imagen === */}
-        {/* La clase 'hidden md:flex' oculta la imagen en pantallas pequeñas (móviles) */}
         <div className="hidden md:flex md:w-1/2 bg-slate-700 items-center justify-center p-8">
-          {/* Asegúrate de que la ruta a tu imagen sea correcta */}
-          <img src="/image_baf334.png" alt="LogiX Logo" className="max-w-xs h-auto" />
+          <img src={Logo} alt="LogiX Logo" className="max-w-xs h-auto" />
         </div>
       </div>
     </div>

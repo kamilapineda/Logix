@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-// --- 1. IMPORTAMOS Link ---
 import { Link } from 'react-router-dom';
 import { joinGroupAPI, getMyMissionsAPI } from '../services/api';
 import Header from '../components/Header';
@@ -37,54 +36,77 @@ function StudentDashboard() {
   };
 
   return (
-    <div className="bg-slate-900 min-h-screen text-white p-8">
+    <div className="bg-gradient-to-b from-slate-900 to-slate-800 min-h-screen text-white p-6">
       <Header />
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Panel del Aventurero del Saber</h1>
-        
-        <div className="bg-slate-800 p-6 rounded-lg shadow-xl mb-8">
-          <h2 className="text-2xl font-bold mb-4">Unirse a un Grupo</h2>
-          <form onSubmit={handleJoinGroup} className="flex items-center gap-4">
-            <input 
-              type="text" 
-              placeholder="Ingresa el código"
+      <div className="max-w-6xl mx-auto">
+
+        {/* Título */}
+        <h1 className="text-5xl font-extrabold mb-10 text-center text-yellow-400 drop-shadow-lg">
+          Panel del Aventurero del Saber
+        </h1>
+
+        {/* Sección superior: Unirse a grupo */}
+        <div className="bg-slate-800 rounded-3xl shadow-2xl p-6 mb-12 border-2 border-yellow-400">
+          <h2 className="text-3xl font-bold mb-4 text-yellow-400">Unirse a un Grupo</h2>
+          <form onSubmit={handleJoinGroup} className="flex flex-col md:flex-row gap-4 items-center">
+            <input
+              type="text"
+              placeholder="Código del grupo"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              className="flex-grow p-2 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono tracking-widest text-center"
+              className="flex-grow p-4 bg-slate-700 rounded-xl border-2 border-yellow-400 text-center font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all hover:scale-105"
             />
-            <button type="submit" className="bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors duration-300">
+            <button
+              type="submit"
+              className="bg-green-500 hover:bg-green-600 font-bold py-3 px-6 rounded-xl shadow-lg transform transition-all hover:scale-105"
+            >
               Unirse
             </button>
           </form>
-          {message && <p className="mt-4 text-center">{message}</p>}
+          {message && <p className="mt-4 text-center text-red-400 font-semibold">{message}</p>}
         </div>
 
+        {/* Mis Aventuras */}
         <div>
-          <h2 className="text-3xl font-bold mb-4">Mis Aventuras</h2>
+          <h2 className="text-4xl font-bold mb-6 text-yellow-400 text-center drop-shadow-md">Mis Aventuras</h2>
           {myGroupsData.length === 0 ? (
-            <p className="text-slate-400">Aún no tienes misiones. ¡Únete a un grupo para empezar la aventura!</p>
+            <p className="text-slate-400 text-lg text-center">
+              Aún no tienes misiones. ¡Únete a un grupo para empezar la aventura!
+            </p>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-10">
               {myGroupsData.map(group => (
-                <div key={group.groups_id || group.id} className="bg-slate-800 p-4 rounded-lg">
-                  <h3 className="text-2xl font-semibold text-yellow-400 mb-3">{group.name}</h3>
+                <div key={group.groups_id || group.id} className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-3xl shadow-2xl p-6 border-2 border-indigo-500">
+                  
+                  {/* Nombre del grupo */}
+                  <h3 className="text-3xl font-bold text-indigo-400 mb-6 drop-shadow-md text-center">
+                    {group.name}
+                  </h3>
+
+                  {/* Contenedor de misiones tipo tablero */}
                   {group.missions.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                       {group.missions.map(mission => {
                         const missionId = mission.mission_id || mission.id;
                         return (
-                          // --- 2. ENVOLVEMOS LA TARJETA EN EL LINK ---
                           <Link to={`/mission/${missionId}`} key={missionId}>
-                            <div className="bg-slate-700 p-4 rounded shadow-md hover:bg-slate-600 cursor-pointer h-full transition-colors duration-200">
-                              <h4 className="font-bold text-lg">{mission.nombre}</h4>
-                              <p className="text-sm text-slate-300">Dificultad: {mission.dificultad}</p>
+                            <div className="bg-gradient-to-b from-slate-700 to-slate-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 transition-all duration-300 cursor-pointer border-2 border-yellow-400 flex flex-col justify-between h-full">
+                              <h4 className="font-extrabold text-xl text-yellow-300 mb-3">{mission.nombre}</h4>
+                              <p className="text-slate-300 text-sm mb-4"> {mission.description || "Sin descripción"}</p>
+                              <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold w-max ${
+                                mission.dificultad === 'Alta' ? 'bg-red-500 text-white' :
+                                mission.dificultad === 'Media' ? 'bg-yellow-500 text-black' :
+                                'bg-green-500 text-black'
+                              }`}>
+                                {mission.dificultad}
+                              </span>
                             </div>
                           </Link>
                         );
                       })}
                     </div>
                   ) : (
-                    <p className="text-slate-400">Este grupo aún no tiene misiones asignadas.</p>
+                    <p className="text-slate-400 text-lg text-center">Este grupo aún no tiene misiones asignadas.</p>
                   )}
                 </div>
               ))}

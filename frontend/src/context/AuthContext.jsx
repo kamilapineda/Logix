@@ -1,29 +1,72 @@
-import { useState, createContext, useEffect } from 'react';
+import { createContext, useState, useEffect } from "react";
+import { getProfileAPI } from "../services/api";
 
-// 1. Creamos el "tablón de anuncios" (Contexto)
 export const AuthContext = createContext();
 
-// 2. Creamos el componente "Proveedor" que publicará la información
-export const AuthProvider = ({ children }) => {
-  // Esta es la "memoria" o el estado que compartiremos
-  const [user, setUser] = useState(null); // Empieza como null porque no hay nadie logueado
+export function AuthProvider({ children }) {
+  // Estado inicial: intenta leer usuario de localStorage
+  const [user, setUser] = useState(() => {
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(true);
 
-  // Esta es la función que los componentes usarán para iniciar sesión
+    // Inicia sesión guardando datos de usuario
   const login = (userData) => {
     setUser(userData);
   };
 
-  // Esta es la función para cerrar sesión
-  const logout = () => {
-    localStorage.removeItem('authToken');
+    // Cierra sesión limpiando backend y localStorage
+  const logout = async () => {
+    try {
+      await fetch("http://localhost:3000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     setUser(null);
+    localStorage.removeItem("user");
   };
 
-  // 3. Publicamos la información en el "tablón" para que otros la lean
-  //    Compartimos el estado del usuario, y las funciones para cambiarlo.
+  // Al montar: valida cookie y recupera perfil
+  useEffect(() => {
+    let mounted = true;
+    const init = async () => {
+      try {
+        const profile = await getProfileAPI(); // usa credentials:'include'
+        if (!mounted) return;
+        setUser(profile);
+      } catch (err) {
+        console.warn("No se pudo recuperar perfil:", err.message || err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    init();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Sincroniza cambios de user con localStorage
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
+  }, [user]);
+
+    // Provee contexto a los hijos
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
